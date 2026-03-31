@@ -1,4 +1,4 @@
-# Modul Pertemuan 4
+# Modul Pertemuan 3
 
 ## Administrasi Basis Data
 
@@ -9,7 +9,7 @@
 ## A. Identitas Materi
 
 **Nama Modul:** Struktur Index, Index-Only Scan, dan Algoritma Akses Data  
-**Pertemuan:** 4  
+**Pertemuan:** 3  
 **Prasyarat:** SQL Dasar, pemrosesan query, execution plan dasar  
 **DBMS:** PostgreSQL  
 **Fokus Materi:** memahami struktur index dan cara database membaca data secara efisien
@@ -140,6 +140,116 @@ Data index disusun seperti pohon bertingkat. Pencarian dimulai dari root, lalu t
       <20     20-40    >40
 ```
 
+### Contoh Struktur B-Tree yang Lebih Detail
+
+Perhatikan struktur B-Tree berikut yang menggambarkan index pada kolom NIM mahasiswa:
+
+```text
+Root Level:
+                [100 | 155 | 226]
+               /    |    |    \
+          <100     100-155  155-226  >226
+```
+
+Data index dibagi menjadi 4 wilayah berdasarkan nilai pembatas:
+1. Nilai < 100 (cabang kiri)
+2. Nilai 100-155 (cabang tengah kiri)  
+3. Nilai 155-226 (cabang tengah kanan)
+4. Nilai > 226 (cabang kanan)
+
+![B-Tree Structure](image/B-tree.jpg)
+
+### Cara Membaca B-Tree: Langkah Demi Langkah
+
+#### Contoh 1: Mencari NIM = 130
+
+1. **Mulai dari root**: `[100 | 155 | 226]`
+2. **Evaluasi posisi**: 130 > 100 dan 130 < 155
+3. **Pilih cabang**: masuk ke cabang kedua (100-155)
+4. **Node tingkat kedua**: `[128 | 140]` 
+5. **Evaluasi lagi**: 130 > 128 dan 130 < 140
+6. **Turun ke leaf**: menemukan data dengan NIM 130
+
+#### Contoh 2: Mencari NIM = 50
+
+1. **Mulai dari root**: `[100 | 155 | 226]`
+2. **Evaluasi posisi**: 50 < 100
+3. **Pilih cabang**: masuk ke cabang pertama (<100)
+4. **Node tingkat kedua**: `[48 | 50 | 79]`
+5. **Scan node**: menemukan NIM 50 di node ini
+
+#### Contoh 3: Mencari NIM = 275
+
+1. **Mulai dari root**: `[100 | 155 | 226]`
+2. **Evaluasi posisi**: 275 > 226
+3. **Pilih cabang**: masuk ke cabang keempat (>226)
+4. **Node tingkat kedua**: `[270 | 290]`
+5. **Evaluasi**: 275 > 270 dan 275 < 290
+6. **Turun ke leaf**: menemukan data dengan NIM 275
+
+### Prinsip Kerja B-Tree
+
+Algoritma pencarian B-Tree mengikuti pola sederhana:
+
+1. **Mulai dari root** (node paling atas)
+2. **Bandingkan nilai yang dicari** dengan nilai pembatas di node
+3. **Pilih cabang yang sesuai** berdasarkan range nilai
+4. **Turun ke level berikutnya** dan ulangi proses
+5. **Terus turun** sampai mencapai leaf node dan menemukan data
+
+### Apa itu Leaf Node?
+
+**Leaf node** adalah node atau simpul paling bawah dalam struktur pohon B-Tree yang berisi data aktual yang dicari.
+
+Karakteristik leaf node:
+
+* **Posisi**: Berada di tingkat paling bawah dari struktur B-Tree
+* **Isi**: Menyimpan data sebenarnya atau pointer ke data pada tabel utama
+* **Tidak memiliki cabang**: Tidak memiliki node anak di bawahnya
+* **Tujuan pencarian**: Lokasi akhir di mana data yang dicari ditemukan
+
+#### Ilustrasi Sederhana
+
+```text
+Root Node:    [100 | 155 | 226]         ← Node paling atas
+                    |
+Internal Node: [128 | 140]              ← Node perantara
+                    |
+Leaf Node:     [130]                    ← Node paling bawah (berisi data aktual)
+```
+
+Dalam contoh di atas:
+- **Root node**: `[100 | 155 | 226]` adalah titik awal pencarian
+- **Internal node**: `[128 | 140]` adalah node perantara yang membantu mengarahkan pencarian
+- **Leaf node**: `[130]` adalah tempat data NIM 130 benar-benar tersimpan
+
+#### Mengapa Disebut "Leaf"?
+
+Istilah "leaf" berasal dari analogi pohon di mana:
+- **Root** = akar pohon (paling atas dalam B-Tree)
+- **Branch** = cabang pohon (internal nodes)  
+- **Leaf** = daun pohon (ujung cabang yang tidak memiliki cabang lagi)
+
+### Keuntungan Struktur Bercabang
+
+Struktur pohon bertingkat ini memberikan keuntungan:
+
+* **Mengurangi langkah pencarian**: tidak perlu memeriksa semua data satu per satu
+* **Pembagian data yang efisien**: setiap node membagi range data menjadi bagian-bagian lebih kecil
+* **Konsistensi performa**: jumlah langkah pencarian relatif sama untuk data apapun
+
+### Analogi Sederhana
+
+B-Tree bekerja seperti direktori mall yang tersusun bertingkat:
+
+```text
+Direktori Utama: [Lantai 1-3 | Lantai 4-6 | Lantai 7-9]
+                     |           |           |
+                 Toko A-M    Toko N-S    Toko T-Z
+```
+
+Alih-alih mencari toko satu per satu di seluruh mall, kita langsung menuju area yang tepat berdasarkan pembagian yang sudah ada.
+
 ### Kelebihan
 
 * cepat untuk pencarian nilai tertentu,
@@ -156,22 +266,145 @@ Data index disusun seperti pohon bertingkat. Pencarian dimulai dari root, lalu t
 
 ## 2. Hash Index
 
-`Hash Index` menyimpan nilai dalam bentuk hash.
+Hash Index adalah metode indexing yang menggunakan hash function untuk menentukan lokasi data secara langsung. Data tidak dicari satu per satu, tetapi langsung dilompat ke tempatnya (bucket).
 
-### Kelebihan
+![Hash Index Structure](./image/hash%20index.png)
 
-* cepat untuk pencarian nilai yang sama persis.
+### Cara Kerja Hash Index
 
-### Kekurangan
+Hash Index bekerja dalam tiga langkah utama:
 
-* tidak cocok untuk range query,
-* lebih sempit penggunaannya dibanding `B-Tree`.
+1. **Data masuk (key)**
+   ```
+   ID = 123
+   ```
 
-### Cocok untuk
+2. **Diproses oleh hash function**
+   ```
+   hash = 123 % 10 = 3
+   ```
 
+3. **Disimpan di bucket**
+   ```
+   Bucket 3 → 123
+   ```
+
+### Proses Pencarian Data
+
+Ketika mencari data:
+```sql
+SELECT * FROM mahasiswa WHERE id = 123;
+```
+
+Langkah yang dilakukan:
+1. Hitung hash → 123 % 10 = 3
+2. Langsung ke bucket 3  
+3. Data ditemukan
+
+### Mengapa Menggunakan Modulo (%)
+
+Fungsi modulo digunakan karena:
+- Jumlah bucket terbatas (misal 0-9)
+- Data bisa sangat besar
+- Membatasi hasil agar selalu dalam range bucket
+
+Contoh:
+```
+999 % 10 = 9
+```
+
+Semua data pasti memiliki alamat bucket.
+
+### Struktur Penyimpanan
+
+```
+Bucket:
+0 → -
+1 → 21
+2 → 32  
+3 → 43
+```
+
+Setiap bucket merupakan tempat penyimpanan data.
+
+![Hash Index Implementation](./image/hash%20index%202.jpg)
+
+### Collision (Tabrakan)
+
+Collision terjadi ketika dua data memiliki hash yang sama:
+
+```
+21 % 10 = 1
+31 % 10 = 1
+```
+
+Hasil collision:
+```
+Bucket 1 → 21, 31
+```
+
+**Cara mengatasi collision:**
+- Disimpan dalam list (chaining)
+- Mencari slot lain (open addressing)
+
+### Contoh-Contoh Hash Index
+
+#### 1. Data Angka (ID)
+```
+21 % 10 = 1
+32 % 10 = 2
+43 % 10 = 3
+```
+
+#### 2. Data String (Nama)
+```
+ANI = A(1) + N(14) + I(9) = 24
+24 % 10 = 4 → bucket 4
+```
+
+#### 3. Kode Produk
+```
+P010 → 10
+10 % 5 = 0 → bucket 0
+```
+
+### Kelebihan Hash Index
+
+- Sangat cepat (O(1)) untuk pencarian exact match
+- Langsung menuju lokasi data
+- Efisien untuk equality comparison
+
+Contoh query yang efisien:
 ```sql
 WHERE id = 10
+WHERE status = 'Aktif'
+WHERE kode_produk = 'P001'
 ```
+
+### Kekurangan Hash Index
+
+- Tidak mendukung range query
+- Tidak dapat digunakan untuk sorting
+- Kemungkinan terjadinya collision
+- Tidak efisien untuk operasi perbandingan (`<`, `>`, `BETWEEN`)
+
+Contoh query yang tidak efisien:
+```sql
+WHERE id > 10
+WHERE tanggal BETWEEN '2023-01-01' AND '2023-12-31'
+ORDER BY nama
+```
+
+### Perbandingan dengan B-Tree Index
+
+| Aspek | Hash Index | B-Tree Index |
+|-------|------------|--------------|
+| Cara kerja | Langsung lompat ke bucket | Traversal pohon |
+| Kecepatan equality | Sangat cepat (O(1)) | Cepat (O(log n)) |
+| Range query | Tidak mendukung | Mendukung |
+| Sorting | Tidak mendukung | Mendukung |
+| Collision | Bisa terjadi | Tidak ada |
+| Memory overhead | Rendah | Sedang |
 
 ---
 

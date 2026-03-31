@@ -1,15 +1,15 @@
-# Modul Pertemuan 6
+# Modul Pertemuan 5
 
 ## Administrasi Basis Data
 
-### Memahami Execution Plan pada Database (PostgreSQL)
+### Analisis EXPLAIN dan EXPLAIN ANALYZE
 
 ---
 
 ## A. Identitas Materi
 
-**Nama Modul:** Memahami Execution Plan pada Database (PostgreSQL)  
-**Pertemuan:** 6  
+**Nama Modul:** Analisis EXPLAIN dan EXPLAIN ANALYZE  
+**Pertemuan:** 5  
 **Prasyarat:** SQL Dasar, pemrosesan query, index, algoritma akses data, algoritma join  
 **DBMS:** PostgreSQL  
 **Fokus Materi:** memahami cara membaca execution plan sebagai dasar analisis performa query

@@ -1,4 +1,4 @@
-# Modul Pertemuan 5
+# Modul Pertemuan 4
 
 ## Administrasi Basis Data
 
@@ -9,7 +9,7 @@
 ## A. Identitas Materi
 
 **Nama Modul:** Algoritma Join pada Database  
-**Pertemuan:** 5  
+**Pertemuan:** 4  
 **Prasyarat:** SQL Dasar, pemrosesan query, index dan algoritma akses data  
 **DBMS:** PostgreSQL  
 **Fokus Materi:** memahami cara database menggabungkan tabel dan memilih algoritma join yang efisien
@@ -30,7 +30,7 @@ Setelah mengikuti pertemuan ini, mahasiswa diharapkan mampu:
 
 ## C. Keterkaitan dengan Pertemuan Sebelumnya
 
-Pada Week 4, kita mempelajari bagaimana database menemukan dan membaca data melalui index dan algoritma akses data seperti `Seq Scan`, `Index Scan`, dan `Index-Only Scan`.
+Pada pertemuan sebelumnya, kita mempelajari bagaimana database menemukan dan membaca data melalui index dan algoritma akses data seperti `Seq Scan`, `Index Scan`, dan `Index-Only Scan`.
 
 Setelah data berhasil ditemukan, database sering masih harus menggabungkan data dari beberapa tabel. Proses penggabungan inilah yang menjadi fokus pembahasan pada pertemuan ini.
 

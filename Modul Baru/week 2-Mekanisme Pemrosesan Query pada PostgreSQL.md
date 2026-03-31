@@ -1,15 +1,15 @@
-# Modul Pertemuan 3
+# Modul Pertemuan 2
 
 ## Administrasi Basis Data
 
-### Pemrosesan Query pada Database
+### Mekanisme Pemrosesan Query pada PostgreSQL
 
 ---
 
 ## A. Identitas Materi
 
-**Nama Modul:** Pemrosesan Query pada Database  
-**Pertemuan:** 3  
+**Nama Modul:** Mekanisme Pemrosesan Query pada PostgreSQL  
+**Pertemuan:** 2  
 **Prasyarat:** SQL Dasar, tabel dan relasi, pengantar optimasi database  
 **DBMS:** PostgreSQL  
 **Fokus Materi:** memahami proses yang terjadi ketika query dijalankan oleh sistem database

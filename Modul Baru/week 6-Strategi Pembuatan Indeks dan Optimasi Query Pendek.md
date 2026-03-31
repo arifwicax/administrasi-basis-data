@@ -1,15 +1,15 @@
-# Modul Pertemuan 7
+# Modul Pertemuan 6
 
 ## Administrasi Basis Data
 
-### Short Queries dan Peran Index dalam Optimasi Query
+### Strategi Pembuatan Indeks dan Optimasi Query Pendek
 
 ---
 
 ## A. Identitas Materi
 
-**Nama Modul:** Short Queries dan Peran Index dalam Optimasi Query  
-**Pertemuan:** 7  
+**Nama Modul:** Strategi Pembuatan Indeks dan Optimasi Query Pendek  
+**Pertemuan:** 6  
 **Prasyarat:** SQL Dasar, pemrosesan query, execution plan, algoritma akses data, algoritma join  
 **DBMS:** PostgreSQL  
 **Fokus Materi:** memahami karakteristik query yang hanya mengambil sebagian kecil data dan peran index dalam mempercepat query tersebut
