@@ -370,9 +370,9 @@ P010 → 10
 
 ### Kelebihan Hash Index
 
-- Sangat cepat (O(1)) untuk pencarian exact match
+- Sangat cepat untuk pencarian data
 - Langsung menuju lokasi data
-- Efisien untuk equality comparison
+- Efisien
 
 Contoh query yang efisien:
 ```sql
@@ -400,7 +400,7 @@ ORDER BY nama
 | Aspek | Hash Index | B-Tree Index |
 |-------|------------|--------------|
 | Cara kerja | Langsung lompat ke bucket | Traversal pohon |
-| Kecepatan equality | Sangat cepat (O(1)) | Cepat (O(log n)) |
+| Kecepatan equality | Sangat cepat | Cepat |
 | Range query | Tidak mendukung | Mendukung |
 | Sorting | Tidak mendukung | Mendukung |
 | Collision | Bisa terjadi | Tidak ada |
@@ -410,24 +410,75 @@ ORDER BY nama
 
 ## 3. Bitmap Index
 
-`Bitmap Index` menggunakan representasi bit untuk menunjukkan keberadaan nilai pada posisi tertentu.
+`Bitmap Index` menggunakan representasi bit untuk menunjukkan keberadaan nilai pada posisi tertentu. Setiap bit mewakili keberadaan suatu nilai pada record tertentu dengan menggunakan nilai 1 (ada) atau 0 (tidak ada).
 
-### Ilustrasi Sederhana
+### Contoh Implementasi
 
+Misalkan kita memiliki data mahasiswa berdasarkan jenis kelamin:
+
+| Nama | Laki-laki |
+|------|-----------|
+| Andi | 1         |
+| Siti | 0         |
+| Budi | 1         |
+| Rina | 0         |
+
+Keterangan:
+- 1 = Ya (laki-laki)
+- 0 = Tidak (bukan laki-laki, berarti perempuan)
+
+### Cara Kerja Bitmap Index
+
+Ketika ada query untuk mencari semua mahasiswa laki-laki:
+
+```sql
+SELECT * FROM mahasiswa WHERE gender = 'L';
+```
+
+Database hanya perlu:
+1. Membaca bitmap index untuk kolom gender
+2. Mengambil semua record yang memiliki bit value = 1
+3. Mengembalikan data yang sesuai
+
+Prosesnya sangat cepat karena database hanya perlu membaca bit (0/1) yang sangat ringan dalam hal komputasi.
+
+### Operasi Logika pada Bitmap
+
+Bitmap index sangat efisien untuk operasi logika:
+
+**Contoh query dengan AND:**
+```sql
+SELECT * FROM mahasiswa 
+WHERE gender = 'L' AND status = 'aktif';
+```
+
+Bitmap dapat melakukan operasi AND langsung:
 ```text
-L -> 1 0 1 1 0
-P -> 0 1 0 0 1
+Gender (L):  1 0 1 1 0
+Status (A):  1 1 0 1 0
+Result (AND): 1 0 0 1 0
 ```
 
 ### Kelebihan
 
-* efisien untuk data dengan jumlah nilai unik yang sedikit,
-* mudah dikombinasikan dengan operasi logika seperti `AND` dan `OR`.
+* Sangat efisien untuk data dengan sedikit variasi nilai
+* Cocok untuk kolom dengan tipe data boolean atau kategorikal
+* Mendukung operasi logika (AND, OR, NOT) dengan cepat
+* Menghemat ruang penyimpanan untuk data dengan cardinalitas rendah
 
 ### Kekurangan
 
-* kurang cocok untuk kolom dengan banyak nilai unik,
-* tidak selalu menjadi pilihan utama pada PostgreSQL umum.
+* Kurang efisien untuk kolom dengan banyak nilai unik (high cardinality)
+* Dapat menjadi sangat besar jika jumlah record banyak dan nilai unik sedikit
+* Tidak selalu menjadi pilihan utama pada PostgreSQL
+
+### Kapan Menggunakan Bitmap Index
+
+Bitmap index paling cocok untuk:
+- Kolom gender (L/P)
+- Status data (aktif/tidak aktif)
+- Flag ya/tidak
+- Kategori dengan nilai terbatas (misalnya: "rendah", "sedang", "tinggi")
 
 ---
 

@@ -1,7 +1,7 @@
 
 # 📌 Tugas Besar Basis Data – PostgreSQL
 
-## 📍 Studi Kasus: Sistem Akademik
+## Studi Kasus: Sistem Akademik
 
 ### 1. ERD (Entity Relationship Diagram)
 
