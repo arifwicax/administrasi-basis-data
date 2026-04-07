@@ -118,27 +118,32 @@ Artinya, PostgreSQL memilih membaca data menggunakan index pada kolom `angkatan`
 
 ---
 
-## G. Peran Optimizer dalam Execution Plan
+## G. Apa Itu Optimizer?
 
-Optimizer adalah bagian dari database yang bertugas memilih strategi eksekusi terbaik.
+Optimizer adalah "otak" dalam database yang bertugas menentukan cara terbaik untuk menjalankan query.
 
-Sebelum execution plan ditentukan, optimizer akan mempertimbangkan beberapa kemungkinan, misalnya:
+### Cara kerja optimizer
 
-1. metode scan yang tersedia,
-2. urutan join,
-3. algoritma join yang mungkin dipakai,
-4. perkiraan biaya masing-masing pilihan.
+Bayangkan Anda ingin pergi dari rumah ke kampus. Ada beberapa rute yang bisa dipilih:
+- Jalan tol (cepat tapi bayar)
+- Jalan biasa (lambat tapi gratis)  
+- Jalan pintas (cepat tapi macet)
 
-### Hal penting yang perlu dipahami
+Optimizer bekerja seperti aplikasi GPS yang memilih rute terbaik. Bedanya, optimizer memilih cara terbaik untuk mengambil data.
 
-Optimizer tidak mencoba semua kemungkinan secara penuh, karena jumlahnya bisa sangat banyak. Oleh karena itu, optimizer menggunakan:
+### Hal yang dipertimbangkan optimizer
 
-* statistik data,
-* aturan optimasi,
-* heuristik,
-* perhitungan cost.
+1. **Ukuran tabel** - tabel kecil vs tabel besar
+2. **Ketersediaan index** - ada index atau tidak
+3. **Jumlah data yang difilter** - sedikit atau banyak
+4. **Statistik tabel** - data yang sering muncul vs jarang
 
-Karena itu, execution plan adalah **hasil perkiraan terbaik** menurut optimizer, bukan jaminan bahwa plan tersebut selalu paling benar dalam semua kondisi.
+### Penting untuk diingat
+
+Optimizer tidak selalu sempurna! Kadang-kadang pilihannya kurang tepat karena:
+- Statistik data sudah lama tidak diupdate
+- Kondisi data berubah drastis
+- Query yang sangat rumit sulit diprediksi
 
 ---
 
@@ -154,9 +159,9 @@ Setiap node mewakili satu operasi, misalnya:
 * `Sort`,
 * `Aggregate`.
 
-### Ilustrasi sederhana struktur tree
+### Cara memahami struktur tree
 
-Sebelum melihat gambar eksternal, perhatikan bentuk tree yang lebih sederhana berikut.
+Execution plan berbentuk seperti pohon terbalik. Mari kita lihat contoh sederhana:
 
 ```mermaid
 flowchart BT
@@ -165,52 +170,46 @@ flowchart BT
   B --> D[Seq Scan pada krs]
 ```
 
-Diagram ini menunjukkan bahwa:
+Dari diagram di atas, kita bisa memahami:
 
-1. node paling bawah adalah operasi dasar,
-2. hasil dari node bawah dikirim ke node di atas,
-3. node paling atas adalah hasil akhir query.
+1. **Node paling bawah** = operasi dasar (membaca data)
+   - Index Scan pada tabel mahasiswa
+   - Seq Scan pada tabel krs
 
-### Gambar referensi execution plan
+2. **Node tengah** = operasi penggabungan
+   - Hash Join menggabungkan hasil dari kedua scan
 
-Gambar berikut tetap dipertahankan karena membantu mahasiswa melihat bagaimana plan tampil pada alat analisis yang sebenarnya.
+3. **Node paling atas** = hasil akhir yang dikirim ke user
 
-![Struktur tree execution plan](https://tanelpoder.com/files/images/sql-plan-tree.png)
+### Prinsip membaca tree
 
-Keterangan singkat untuk gambar di atas:
+Penting untuk diingat:
+- Data mengalir dari bawah ke atas
+- Operasi paling dasar ada di bagian bawah
+- Hasil akhir ada di bagian atas
+- Setiap kotak mewakili satu jenis operasi database
 
-* bagian paling bawah menunjukkan operasi awal,
-* bagian tengah menunjukkan proses gabungan seperti join atau sort,
-* bagian paling atas menunjukkan hasil akhir dari keseluruhan query.
+### Langkah-langkah membaca execution plan
 
-![Contoh visual query plan PostgreSQL](https://www.devart.com/dbforge/postgresql/studio/images/postgres-query-analyzis-schema.png)
+Untuk memudahkan pemahaman, ikuti urutan berikut:
 
-Keterangan singkat untuk gambar di atas:
-
-* kotak atau node mewakili jenis operasi,
-* garis penghubung menunjukkan aliran data,
-* urutan proses tetap dipahami dari bawah menuju ke atas.
-
-### Cara cepat membaca gambar tree
-
-Saat mahasiswa melihat gambar execution plan berbentuk tree, gunakan urutan berikut:
-
-1. cari node paling bawah,
-2. identifikasi scan yang digunakan,
-3. lihat apakah ada join, sort, atau aggregate,
-4. baru lihat node paling atas sebagai hasil akhir.
+1. **Mulai dari bawah** - cari operasi scan (Seq Scan, Index Scan)
+2. **Lihat operasi tengah** - apakah ada join, sort, atau aggregate
+3. **Perhatikan aliran data** - dari bawah naik ke atas
+4. **Pahami hasil akhir** - node paling atas adalah output query
 
 ---
 
-## I. Cara Membaca Execution Plan
+## I. Cara Mudah Membaca Execution Plan
 
-Aturan dasar yang paling penting adalah:
+### Aturan paling penting:
 
-> execution plan umumnya dibaca dari bawah ke atas.
+> **Baca dari bawah ke atas!**
 
-Mengapa demikian?
-
-Karena database memulai pekerjaan dari operasi dasar, misalnya membaca tabel atau index, lalu hasil dari operasi itu diteruskan ke node berikutnya sampai menghasilkan output akhir.
+Mengapa? Karena database bekerja seperti pabrik:
+1. **Bahan mentah** (data dari tabel) diproses dulu
+2. **Proses pengolahan** (join, filter, sort) di tengah
+3. **Hasil jadi** (output final) di atas
 
 ### Contoh sederhana
 
@@ -218,9 +217,9 @@ Karena database memulai pekerjaan dari operasi dasar, misalnya membaca tabel ata
 Seq Scan on mahasiswa
 ```
 
-Artinya PostgreSQL membaca tabel `mahasiswa` secara berurutan.
+**Artinya:** PostgreSQL membaca tabel mahasiswa dari awal sampai akhir
 
-### Contoh yang lebih lengkap
+### Contoh yang lebih kompleks
 
 ```text
 Hash Join
@@ -228,11 +227,16 @@ Hash Join
   -> Seq Scan on mahasiswa
 ```
 
-Artinya:
+**Langkah-langkahnya:**
+1. Baca tabel `krs` (baris kedua dari bawah)
+2. Baca tabel `mahasiswa` (baris paling bawah) 
+3. Gabungkan keduanya dengan Hash Join (baris paling atas)
 
-1. PostgreSQL membaca tabel `krs`,
-2. PostgreSQL membaca tabel `mahasiswa`,
-3. kedua hasil tersebut digabungkan dengan `Hash Join`.
+### Tips praktis
+
+- **Mulai dari paling bawah** = operasi pertama yang dikerjakan
+- **Naik ke atas** = operasi selanjutnya
+- **Paling atas** = hasil yang dikirim ke user
 
 ---
 
@@ -255,7 +259,7 @@ Contoh:
 * `Sort`,
 * `Aggregate`.
 
-## 2. Cost
+## 2. Cost (Biaya Perkiraan)
 
 Contoh tampilan:
 
@@ -263,14 +267,27 @@ Contoh tampilan:
 cost=0.00..125.50
 ```
 
-Cost adalah perkiraan biaya eksekusi menurut optimizer.
+### Apa itu cost?
 
-Secara umum:
+Cost adalah "harga" yang harus dibayar database untuk menjalankan suatu operasi. Tapi ingat:
+- **Bukan waktu dalam detik!** → Cost adalah angka perbandingan internal
+- **Angka pertama** (0.00) = biaya untuk mulai operasi
+- **Angka kedua** (125.50) = total biaya sampai operasi selesai
 
-* angka pertama adalah perkiraan biaya awal,
-* angka kedua adalah perkiraan biaya total sampai operasi selesai.
+### Cara memahami cost
 
-Cost bukan satuan waktu nyata seperti detik atau milidetik. Cost adalah angka internal yang dipakai PostgreSQL untuk membandingkan beberapa kemungkinan plan.
+- **Cost kecil** (misal: 1.5) = operasi ringan, cepat
+- **Cost besar** (misal: 5000) = operasi berat, lambat
+- **Yang penting**: perbandingan antar operasi, bukan angka mutlaknya
+
+### Contoh praktis
+
+```text
+Seq Scan: cost=0.00..100.50
+Index Scan: cost=0.43..25.20
+```
+
+Dari sini kita tahu Index Scan lebih "murah" daripada Seq Scan untuk query ini.
 
 ## 3. Rows
 
@@ -292,11 +309,11 @@ Informasi ini membantu optimizer memperkirakan beban memory dan pemindahan data 
 
 ---
 
-## K. `EXPLAIN` dan `EXPLAIN ANALYZE`
+## K. Perbedaan `EXPLAIN` dan `EXPLAIN ANALYZE`
 
-## 1. `EXPLAIN`
+### 1. `EXPLAIN` = Rencana Saja
 
-`EXPLAIN` menampilkan rencana eksekusi yang dipilih oleh optimizer tanpa benar-benar mengukur waktu nyata pelaksanaannya.
+`EXPLAIN` seperti melihat rencana perjalanan sebelum berangkat.
 
 Contoh:
 
@@ -307,9 +324,15 @@ FROM mahasiswa
 WHERE angkatan = 2023;
 ```
 
-## 2. `EXPLAIN ANALYZE`
+**Yang ditampilkan:**
+- Rencana yang akan dijalankan
+- Perkiraan cost dan rows
+- **TIDAK menjalankan query sama sekali**
+- Cepat dan aman untuk query besar
 
-`EXPLAIN ANALYZE` menjalankan query dan menampilkan hasil pengukuran nyata.
+### 2. `EXPLAIN ANALYZE` = Rencana + Pelaksanaan
+
+`EXPLAIN ANALYZE` seperti melihat rencana perjalanan DAN benar-benar melakukan perjalanan.
 
 Contoh:
 
@@ -320,12 +343,19 @@ FROM mahasiswa
 WHERE angkatan = 2023;
 ```
 
-Dengan `EXPLAIN ANALYZE`, kita bisa membandingkan:
+**Yang ditampilkan:**
+- Rencana yang dijalankan
+- Hasil nyata (waktu, jumlah baris)
+- Perbandingan perkiraan vs kenyataan
+- **Query benar-benar dijalankan**
 
-* perkiraan rows menurut optimizer,
-* jumlah rows nyata,
-* waktu eksekusi nyata,
-* apakah perkiraan optimizer cukup akurat atau tidak.
+### Kapan pakai yang mana?
+
+| Situasi | Gunakan |
+|---------|----------|
+| Query besar/lama | `EXPLAIN` (aman, cepat) |
+| Analisis mendalam | `EXPLAIN ANALYZE` (detail) |
+| Query INSERT/UPDATE/DELETE | Hati-hati dengan `ANALYZE`! |
 
 ---
 
@@ -381,31 +411,30 @@ Optimizer sangat bergantung pada statistik data. Jika statistik kurang akurat, m
 
 Karena itu, pemahaman tentang distribusi data juga penting saat membaca execution plan.
 
-### Ilustrasi sederhana distribusi data
+### Memahami distribusi data
 
-Sebelum melihat gambar, perhatikan dua kondisi berikut.
+Data dalam tabel tidak selalu tersebar merata. Mari lihat contoh sederhana:
 
 ```mermaid
 xychart-beta
-  title "Perbandingan distribusi nilai"
-  x-axis [US, ID, CZ]
-  y-axis "Jumlah data" 0 --> 100
+  title "Contoh Distribusi Data Mahasiswa per Negara"
+  x-axis [Indonesia, Amerika, Republik_Czech]
+  y-axis "Jumlah Mahasiswa" 0 --> 100
   bar [90, 9, 1]
 ```
 
-Diagram di atas menunjukkan bahwa data bisa sangat tidak merata. Jika satu nilai muncul jauh lebih sering dibanding nilai lain, optimizer bisa memilih plan yang berbeda.
+Dari diagram ini kita bisa melihat:
+- 90% mahasiswa dari Indonesia
+- 9% mahasiswa dari Amerika  
+- 1% mahasiswa dari Republik Czech
 
-### Gambar distribusi data
+### Mengapa distribusi data penting?
 
-Gambar berikut tetap dipertahankan karena membantu mahasiswa melihat contoh distribusi data yang lebih nyata.
+Distribusi data yang tidak merata mempengaruhi cara optimizer memilih execution plan:
 
-![Contoh distribusi data](https://alanarnholt.github.io/PDS-Bookdown2/pds_files/figure-html/unnamed-chunk-19-1.png)
-
-Keterangan singkat untuk gambar di atas:
-
-* puncak yang tinggi berarti ada nilai yang sangat sering muncul,
-* sebaran yang tidak merata membuat perkiraan optimizer menjadi lebih menantang,
-* kondisi ini bisa memengaruhi pilihan antara `Seq Scan` dan `Index Scan`.
+- **Nilai yang sering muncul** → optimizer cenderung pilih Seq Scan
+- **Nilai yang jarang muncul** → optimizer cenderung pilih Index Scan
+- **Distribusi tidak merata** → estimasi optimizer bisa kurang akurat
 
 ### Implikasi praktis
 
@@ -418,24 +447,63 @@ Contoh sederhana:
 
 ---
 
-## O. Strategi Cepat Membaca Query Lambat
+## O. Cara Cepat Mendeteksi Query Lambat
 
-Saat melihat execution plan yang panjang, mahasiswa tidak perlu langsung membaca semua baris sekaligus. Gunakan urutan berikut:
+Ketika melihat execution plan yang panjang dan rumit, jangan panik! Ikuti langkah-langkah ini:
 
-1. lihat operasi scan yang muncul,
-2. lihat join yang dipakai,
-3. lihat node dengan `cost` besar,
-4. bandingkan `rows` perkiraan dan `rows` nyata jika menggunakan `EXPLAIN ANALYZE`,
-5. cari bagian plan yang paling banyak memproses data.
+### Langkah 1: Cari "Biang Kerok" Utama
 
-### Fokus utama
+Fokus pada hal-hal ini dulu:
 
-Dalam banyak kasus, masalah performa sering muncul pada:
+1. **Seq Scan pada tabel besar** 
+   - Contoh: `Seq Scan on orders (rows=1000000)`
+   - **Solusi:** Mungkin butuh index
 
-* `Seq Scan` pada tabel besar,
-* join yang memproses terlalu banyak baris,
-* estimasi rows yang jauh meleset,
-* sorting atau aggregation yang mahal.
+2. **Cost yang sangat tinggi**
+   - Contoh: `cost=0.00..50000.50` 
+   - **Artinya:** Operasi ini paling mahal
+
+3. **Estimasi rows yang meleset jauh**
+   - Perkiraan: `rows=100`
+   - Kenyataan: `actual rows=50000`
+   - **Artinya:** Optimizer salah prediksi
+
+### Langkah 2: Periksa Join
+
+Join yang bermasalah biasanya terlihat seperti ini:
+
+```text
+Nested Loop (cost=0.00..999999.99 rows=1000000)
+```
+
+**Tanda-tanda join bermasalah:**
+- Cost sangat tinggi
+- Rows terlalu banyak  
+- Waktu eksekusi lama (jika pakai ANALYZE)
+
+### Langkah 3: Prioritas Perbaikan
+
+**Urutan prioritas:**
+1. **Seq Scan → Index** (paling mudah diperbaiki)
+2. **Join algorithm** (butuh analisis lebih dalam)  
+3. **Statistics update** (untuk estimasi yang meleset)
+4. **Query restructure** (untuk kasus kompleks)
+
+### Contoh Praktis
+
+**Plan yang bermasalah:**
+```text
+Nested Loop (cost=0.00..50000.99 rows=100000)
+  -> Seq Scan on mahasiswa (cost=0.00..25000.50 rows=50000)
+  -> Seq Scan on krs (cost=0.00..25000.49 rows=100000)
+```
+
+**Plan yang lebih baik:**
+```text
+Hash Join (cost=156.25..789.50 rows=500)
+  -> Index Scan on mahasiswa (cost=0.29..25.50 rows=500)  
+  -> Index Scan on krs (cost=0.29..156.25 rows=500)
+```
 
 ---
 
