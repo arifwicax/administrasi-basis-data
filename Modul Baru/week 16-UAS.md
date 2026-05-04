@@ -2,28 +2,37 @@
 
 ## Administrasi Basis Data
 
-### UAS: Evaluasi Akhir Semester atau Proyek Akhir
+### UAS: Evaluasi Akhir Semester - Proyek Optimasi Database Komprehensif
 
 ---
 
 ## A. Identitas Kegiatan
 
-**Nama Kegiatan:** Ujian Akhir Semester  
+**Nama Kegiatan:** Ujian Akhir Semester - Proyek Integrasi Optimasi PostgreSQL  
 **Pertemuan:** 16  
-**Bentuk:** ujian akhir, presentasi proyek, laporan, atau kombinasi sesuai kebijakan dosen  
-**Cakupan Materi:** pertemuan 1 sampai pertemuan 15
+**Bentuk:** Proyek praktikum komprehensif + Presentasi + Laporan analisis  
+**Cakupan Materi:** Pertemuan 1 sampai pertemuan 15  
+**Durasi:** 3 jam praktikum + 1 minggu laporan
 
 ---
 
 ## B. Tujuan UAS
 
-UAS dirancang untuk mengukur kemampuan mahasiswa dalam:
+UAS ini dirancang untuk menguji kemampuan mahasiswa secara praktis dalam:
 
-1. mengintegrasikan seluruh materi optimasi PostgreSQL selama satu semester,
-2. menganalisis query dan workload secara sistematis,
-3. memberikan rekomendasi optimasi yang masuk akal,
-4. membaca dan menjelaskan hasil pengukuran performa,
-5. mengaitkan hasil optimasi dengan monitoring dan visualisasi performa.
+1. **Menerapkan konsep optimasi** yang telah dipelajari pada kasus nyata
+2. **Menganalisis performa database** menggunakan tools PostgreSQL
+3. **Membuat keputusan optimasi** berdasarkan data dan analisis
+4. **Mengintegrasikan semua teknik** optimasi dalam satu project
+5. **Mengkomunikasikan hasil** optimasi secara teknis dan bisnis
+
+### Mengapa UAS Berbentuk Proyek?
+
+Dalam dunia kerja, seorang Database Administrator (DBA) tidak hanya perlu memahami teori, tetapi juga mampu:
+- Mendiagnosis masalah performa secara cepat
+- Menerapkan solusi optimasi yang tepat
+- Mengukur dampak optimasi secara kuantitatif
+- Melaporkan hasil kepada tim teknis dan manajemen
 
 ---
 
