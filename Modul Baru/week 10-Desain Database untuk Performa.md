@@ -40,17 +40,69 @@ Pada pertemuan ini, fokusnya naik satu tingkat lebih awal, yaitu **desain databa
 
 ## D. Peta Materi
 
-Materi pada modul ini dibahas dengan urutan berikut:
+Pada modul ini, kita akan belajar bagaimana mendesain database yang cepat dan mudah dikelola. Bayangkan seperti merancang rumah - jika fondasinya bagus, rumah akan kokoh dan mudah direnovasi nanti. Begitu juga dengan database!
 
-1. mengapa desain database penting,
-2. studi kasus sederhana desain tabel,
-3. perbedaan kebutuhan OLTP dan OLAP,
-4. fleksibilitas vs efisiensi dan konsistensi,
-5. perbandingan beberapa model penyimpanan data,
-6. normalisasi dan denormalisasi,
-7. natural key dan surrogate key,
-8. kesalahan desain yang umum,
-9. praktikum dan latihan.
+Berikut alur pembelajaran kita:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DESAIN DATABASE UNTUK PERFORMA                             │
+└─────────────────────────────────────────────────────────────┘
+           │
+           ├─→ 1. Mengapa Desain Penting?
+           │    └─ Kenapa harus mikir desain dari awal?
+           │       Apa dampaknya kalau desain salah?
+           │
+           ├─→ 2. Studi Kasus: Nomor Telepon
+           │    └─ Cara simpan nomor telepon user
+           │       Mana yang lebih baik: 1 tabel atau 2 tabel?
+           │
+           ├─→ 3. OLTP vs OLAP
+           │    └─ Database untuk transaksi harian (kasir, booking)
+           │       vs database untuk laporan & analisis (dashboard)
+           │
+           ├─→ 4. Trade-off Desain
+           │    └─ Pilih mana: fleksibel, cepat, atau konsisten?
+           │       (Susah dapat ketiganya sekaligus!)
+           │
+           ├─→ 5. Model Penyimpanan
+           │    ├─ Relasional: Tabel biasa (yang kita pelajari selama ini)
+           │    ├─ EAV: Tabel super fleksibel tapi rumit
+           │    ├─ JSON: Simpan data seperti dokumen
+           │    └─ Hierarkis: Untuk data berbentuk pohon/tree
+           │
+           ├─→ 6. Normalisasi & Denormalisasi
+           │    └─ Normalisasi: Pisah tabel biar rapi (menghindari duplikasi)
+           │       Denormalisasi: Gabung tabel biar query cepat
+           │
+           ├─→ 7. Natural Key vs Surrogate Key
+           │    └─ Primary key pakai ID asli (NIM, NIK)
+           │       atau bikin ID sendiri (auto increment)?
+           │
+           ├─→ 8. Common Mistakes
+           │    └─ Kesalahan yang SERING dilakukan pemula
+           │       dan cara menghindarinya
+           │
+           └─→ 9. Praktikum & Latihan
+                └─ Hands-on: Bikin 2 desain database & bandingkan
+```
+
+**Estimasi Waktu Belajar:** 3-4 jam (termasuk praktikum)
+
+**Cara Belajar yang Efektif:**
+1. Baca konsep sambil bayangkan kasus nyata (misal: toko online, sistem kampus)
+2. Coba semua contoh SQL di PostgreSQL Anda
+3. Jangan skip bagian "Tips Mahasiswa" - ini penting!
+4. Kerjakan praktikum untuk benar-benar paham
+
+**Roadmap Singkat:**
+
+```
+Mulai → Kenapa desain penting? → Lihat contoh konkret → 
+Pahami jenis database → Belajar trade-off → 
+Kenali berbagai model → Normalisasi → Pilih key → 
+Hindari kesalahan umum → Praktik langsung → Selesai!
+```
 
 ---
 
@@ -59,6 +111,20 @@ Materi pada modul ini dibahas dengan urutan berikut:
 Ketika mahasiswa belajar database, perhatian sering langsung tertuju pada query: apakah query cepat, apakah index sudah benar, atau apakah execution plan sudah efisien.
 
 Padahal, dalam banyak kasus, akar masalah performa bukan terletak pada query, tetapi pada **desain database**. Jika desain tabel, relasi, dan pemilihan tipe penyimpanan sejak awal sudah tidak tepat, maka query apa pun akan lebih sulit dioptimasi.
+
+### Analogi Sederhana
+
+Bayangkan Anda ingin membangun rumah:
+- **Desain database** = fondasi dan struktur rumah
+- **Query & index** = pengaturan interior dan furnitur
+
+Jika fondasi rumah salah, mau sesempurna apapun interiornya, rumah tetap akan bermasalah. Begitu juga dengan database!
+
+### Prinsip Utama
+
+> "Bad design cannot be fixed with good queries, but good design makes every query easier."
+> 
+> (Desain buruk tidak bisa diperbaiki dengan query bagus, tapi desain bagus membuat semua query lebih mudah)
 
 Karena itu, desain database sebaiknya dipahami sebagai **fondasi performa jangka panjang**.
 
@@ -81,13 +147,54 @@ Desain database memengaruhi banyak hal sekaligus, antara lain:
 
 Jika desainnya buruk, maka pengembang sering terpaksa membuat query yang rumit, menambah banyak transformasi, atau menambal masalah dengan index yang sebenarnya tidak menyelesaikan akar persoalan.
 
+### Dampak Konkret Desain Buruk
+
+**Contoh Real:** Sistem e-commerce dengan desain buruk
+
+```sql
+-- Desain buruk: semua data order dalam 1 tabel besar
+CREATE TABLE orders (
+  id INT,
+  customer_name TEXT,
+  customer_email TEXT,  -- duplikasi!
+  customer_phone TEXT,  -- duplikasi!
+  product_name TEXT,    -- duplikasi!
+  product_price DECIMAL -- bisa berubah!
+);
+```
+
+**Masalah:**
+- Data customer duplikat di setiap order
+- Kalau customer ganti email, harus update banyak row
+- Kalau harga produk berubah, data historis jadi salah
+- Query jadi lambat karena tabel terlalu besar
+
+**TIPS MAHASISWA:**
+- Pikirkan desain SEBELUM coding
+- Sketsa dulu relasi antar tabel di kertas
+- Tanyakan: "Data apa yang bisa berubah? Data apa yang duplikat?"
+- Konsultasi desain dengan dosen/senior sebelum implementasi
+
 ---
 
 ## G. Studi Kasus: Menyimpan Nomor Telepon
 
 Salah satu contoh paling mudah untuk memahami pengaruh desain adalah cara menyimpan nomor telepon pengguna.
 
-### Desain 1: dipisah ke tabel relasi
+### Skenario
+
+Anda sedang membuat aplikasi kontak. Setiap user bisa punya:
+- Nomor rumah
+- Nomor kantor 
+- Nomor HP
+- Nomor fax (mungkin)
+- Nomor darurat (mungkin)
+
+**Pertanyaan:** Bagaimana cara terbaik menyimpan data ini?
+
+---
+
+### Desain 1: Tabel Terpisah (Relasional)
 
 ```sql
 CREATE TABLE account (
@@ -99,135 +206,650 @@ CREATE TABLE account (
 
 CREATE TABLE phone (
   phone_id INT PRIMARY KEY,
-  account_id INT,
-  phone TEXT,
-  phone_type TEXT
+  account_id INT REFERENCES account(account_id),
+  phone TEXT NOT NULL,
+  phone_type TEXT -- 'home', 'work', 'mobile', 'fax', 'emergency'
 );
+
+CREATE INDEX idx_phone_number ON phone(phone);
+CREATE INDEX idx_phone_account ON phone(account_id);
 ```
 
-### Kelebihan desain ini
+**Diagram ER:**
 
-* fleksibel karena satu akun bisa punya banyak nomor,
-* tidak perlu menambah kolom baru untuk tipe nomor baru,
-* lebih mudah di-index,
-* lebih dekat dengan prinsip normalisasi.
+```
+┌────────────────────┐
+│     ACCOUNT        │
+├────────────────────┤
+│ PK: account_id    │
+│     login         │
+│     first_name    │
+│     last_name     │
+└────────────────────┘
+         │
+         │ 1:N
+         │
+┌────────────────────┐
+│      PHONE         │
+├────────────────────┤
+│ PK: phone_id      │
+│ FK: account_id    │
+│     phone         │
+│     phone_type    │
+└────────────────────┘
+```
 
-### Contoh query
+### Kelebihan Desain 1 (Tabel Terpisah)
+
+1. **Fleksibel**: Satu akun bisa punya 0, 1, atau banyak nomor
+2. **Mudah tambah tipe baru**: Tinggal insert row baru, tidak perlu ALTER TABLE
+3. **Mudah di-index**: Index di kolom `phone` sangat efisien
+4. **Normalisasi**: Sesuai prinsip database relasional
+5. **Mudah query**: Cari nomor telepon sangat simple
+
+### Contoh Data Desain 1
+
+**Tabel account:**
+
+| account_id | login | first_name | last_name |
+|------------|-------|------------|-----------|
+| 1 | budi99 | Budi | Santoso |
+| 2 | ani_d | Ani | Dewi |
+
+**Tabel phone:**
+
+| phone_id | account_id | phone | phone_type |
+|----------|------------|---------------|------------|
+| 101 | 1 | 08123456789 | mobile |
+| 102 | 1 | 021-5551234 | home |
+| 103 | 1 | 021-9998877 | work |
+| 104 | 2 | 08567891234 | mobile |
+
+### Contoh Query Desain 1
+
+**Query 1: Cari pemilik nomor telepon**
 
 ```sql
-SELECT account_id
-FROM phone
-WHERE phone = '08123456789';
+SELECT a.account_id, a.first_name, a.last_name
+FROM account a
+JOIN phone p ON a.account_id = p.account_id
+WHERE p.phone = '08123456789';
 ```
 
-Jika kolom `phone` diindeks, pencarian dapat dilakukan dengan efisien.
+**Query 2: Lihat semua nomor seorang user**
 
-### Desain 2: semua nomor disimpan di satu tabel
+```sql
+SELECT phone, phone_type
+FROM phone
+WHERE account_id = 1
+ORDER BY phone_type;
+```
+
+**Query 3: Tambah nomor baru**
+
+```sql
+INSERT INTO phone (account_id, phone, phone_type)
+VALUES (1, '021-7771234', 'office');
+```
+
+Jika kolom `phone` diindeks dengan `CREATE INDEX idx_phone ON phone(phone)`, pencarian dapat dilakukan dengan sangat efisien (index scan).
+
+---
+
+### Desain 2: Semua Kolom di Satu Tabel
 
 ```sql
 CREATE TABLE account (
   account_id INT PRIMARY KEY,
+  login TEXT,
+  first_name TEXT,
+  last_name TEXT,
   home_phone TEXT,
   work_phone TEXT,
-  cell_phone TEXT
+  cell_phone TEXT,
+  fax_phone TEXT
 );
 ```
 
-### Kekurangan desain ini
+**Diagram:**
 
-* kurang fleksibel,
-* jika ada tipe baru harus tambah kolom,
-* query pencarian menjadi lebih rumit,
-* kebutuhan index juga bisa bertambah.
+```
+┌──────────────────────────────┐
+│         ACCOUNT            │
+├──────────────────────────────┤
+│ PK: account_id             │
+│     login                  │
+│     first_name             │
+│     last_name              │
+│     home_phone             │
+│     work_phone             │
+│     cell_phone             │
+│     fax_phone              │
+└──────────────────────────────┘
+  (Semua dalam 1 tabel)
+```
 
-### Contoh query
+### Kekurangan Desain 2 (Satu Tabel)
+
+1. **Kurang fleksibel**: Hanya bisa simpan sejumlah tipe yang sudah ditentukan
+2. **Banyak NULL**: Jika user tidak punya nomor tertentu, kolom jadi NULL
+3. **Sulit tambah tipe**: Butuh `ALTER TABLE` untuk tambah kolom baru
+4. **Query lebih rumit**: Harus cek banyak kolom dengan OR
+5. **Index kurang efisien**: Perlu banyak index untuk semua kolom phone
+
+### Contoh Data Desain 2
+
+| account_id | first_name | home_phone | work_phone | cell_phone | fax_phone |
+|------------|------------|---------------|---------------|---------------|-------------|
+| 1 | Budi | 021-5551234 | 021-9998877 | 08123456789 | NULL |
+| 2 | Ani | NULL | NULL | 08567891234 | NULL |
+
+Perhatikan banyak NULL value!
+
+### Contoh Query Desain 2
+
+**Query: Cari pemilik nomor (RUMIT!)**
 
 ```sql
-SELECT account_id
+SELECT account_id, first_name, last_name
 FROM account
 WHERE home_phone = '08123456789'
    OR work_phone = '08123456789'
-   OR cell_phone = '08123456789';
+   OR cell_phone = '08123456789'
+   OR fax_phone = '08123456789';
 ```
 
-### Pelajaran dari studi kasus
+**Masalah:**
+- Query panjang dan repetitif
+- Sulit dioptimasi oleh PostgreSQL
+- Perlu banyak index:
+  ```sql
+  CREATE INDEX idx_home ON account(home_phone);
+  CREATE INDEX idx_work ON account(work_phone);
+  CREATE INDEX idx_cell ON account(cell_phone);
+  CREATE INDEX idx_fax ON account(fax_phone);
+  ```
+- Tetap bisa lambat karena OR condition
 
-Desain yang tampak sederhana belum tentu paling baik. Kita harus menyesuaikan bentuk penyimpanan dengan pola data dan pola query yang benar-benar akan dipakai.
+---
+
+### Perbandingan Langsung
+
+| Aspek | Desain 1 (Terpisah) | Desain 2 (Satu Tabel) |
+|-------|---------------------|----------------------|
+| **Fleksibilitas** | Sangat baik | Terbatas |
+| **Query Search** | Simple & cepat | Rumit & lambat |
+| **Tambah tipe baru** | Mudah (INSERT) | Sulit (ALTER TABLE) |
+| **NULL values** | Tidak ada | Banyak |
+| **Index strategy** | 1 index cukup | Butuh banyak index |
+| **Maintenance** | Mudah | Sulit |
+| **Cocok untuk** | Sistem produksi | Data sederhana/statis |
+
+### Pelajaran dari Studi Kasus
+
+**KESIMPULAN PENTING:**
+
+1. Desain yang tampak "sederhana" (satu tabel) belum tentu paling baik
+2. Relasi yang benar membuat sistem lebih fleksibel dan efisien
+3. Normalisasi (pisah tabel) sering lebih baik untuk data dinamis
+4. Pikirkan: "Data ini bisa bertambah? Berapa banyak? Sering dicari?"
+
+**TIPS MAHASISWA:**
+
+- Jika ada hubungan "1 ke banyak" (1 user banyak telepon), pisahkan ke tabel berbeda
+- Jika data sering dicari, pastikan mudah di-index
+- Jangan tambah kolom berulang (phone1, phone2, phone3) - gunakan tabel relasi!
+- Test query SEBELUM deploy ke produksi
 
 ---
 
 ## H. OLTP dan OLAP: Kebutuhan Desain Bisa Berbeda
 
-Tidak semua sistem database mempunyai tujuan yang sama.
+Tidak semua sistem database mempunyai tujuan yang sama. Mari kita pahami dua kategori utama:
 
-### OLTP
+```
+  DATABASE SYSTEMS
+        │
+    ┌───┼───┐
+    │       │
+  OLTP    OLAP
+```
 
-OLTP adalah sistem yang fokus pada transaksi harian, misalnya:
+---
 
-* sistem kasir,
-* aplikasi pemesanan,
-* sistem akademik,
-* sistem perbankan.
+### OLTP (Online Transaction Processing)
 
-Pada OLTP, kebutuhan utamanya adalah:
+**Definisi Sederhana:** Sistem untuk transaksi harian yang cepat dan konsisten
 
-* data konsisten,
-* transaksi cepat,
-* perubahan data sering terjadi.
+**Contoh Aplikasi:**
+- Sistem kasir di supermarket
+- Aplikasi pemesanan online (Tokopedia, Shopee)
+- Sistem perbankan (transfer, tarik tunai)
+- Sistem akademik (input nilai, daftar mata kuliah)
+- Aplikasi booking hotel/tiket
 
-Karena itu, desain yang lebih ternormalisasi sering lebih cocok.
+**Karakteristik:**
 
-### OLAP
+| Aspek | Detail |
+|-------|--------|
+| **Operasi utama** | INSERT, UPDATE, DELETE (tulis banyak) |
+| **Volume data per query** | Sedikit (1-100 rows) |
+| **Frekuensi** | Sangat sering (ribuan per detik) |
+| **Users** | Banyak user concurrent |
+| **Response time** | Harus SANGAT cepat (< 1 detik) |
+| **Fokus** | Konsistensi & integritas data |
 
-OLAP adalah sistem yang fokus pada analisis dan pelaporan, misalnya:
+**Contoh Query OLTP:**
 
-* dashboard manajemen,
-* laporan penjualan,
-* analisis tren,
-* data warehouse.
+```sql
+-- INSERT: Customer beli produk
+INSERT INTO orders (customer_id, product_id, quantity, total)
+VALUES (12345, 789, 2, 50000);
 
-Pada OLAP, kebutuhan utamanya adalah:
+-- UPDATE: Update stok produk
+UPDATE products 
+SET stock = stock - 2 
+WHERE product_id = 789;
 
-* membaca data dalam jumlah besar,
-* agregasi,
-* query analitis.
+-- SELECT: Cek detail 1 order
+SELECT * FROM orders WHERE order_id = 98765;
+```
 
-Dalam konteks ini, denormalisasi kadang dapat dipertimbangkan agar query lebih sederhana dan lebih cepat untuk kebutuhan baca tertentu.
+**Desain Database untuk OLTP:**
 
-### Ringkasan
+```
+✔ Normalisasi (pisah tabel dengan baik)
+✔ Index pada primary key & foreign key
+✔ Constraint untuk jaga integritas
+✔ Transaction (ACID compliance)
+✔ Hindari duplikasi data
+```
 
-| Kebutuhan | Karakter desain yang sering cocok |
-| --- | --- |
-| OLTP | lebih terstruktur, lebih ternormalisasi |
-| OLAP | bisa lebih denormalisasi sesuai kebutuhan analitik |
+---
+
+### OLAP (Online Analytical Processing)
+
+**Definisi Sederhana:** Sistem untuk analisis dan pelaporan data dalam jumlah besar
+
+**Contoh Aplikasi:**
+- Dashboard CEO/Manager
+- Laporan penjualan bulanan
+- Analisis tren customer
+- Data warehouse perusahaan
+- Business Intelligence (BI) tools
+
+**Karakteristik:**
+
+| Aspek | Detail |
+|-------|--------|
+| **Operasi utama** | SELECT dengan agregasi (baca banyak) |
+| **Volume data per query** | Sangat banyak (jutaan rows) |
+| **Frekuensi** | Jarang (beberapa kali per hari/minggu) |
+| **Users** | Sedikit (analyst, manager) |
+| **Response time** | Boleh lebih lama (menit) |
+| **Fokus** | Kecepatan membaca data besar |
+
+**Contoh Query OLAP:**
+
+```sql
+-- Analisis: Total penjualan per bulan
+SELECT 
+  DATE_TRUNC('month', order_date) AS bulan,
+  SUM(total) AS total_penjualan,
+  COUNT(*) AS jumlah_order,
+  AVG(total) AS rata_rata
+FROM orders
+WHERE order_date >= '2024-01-01'
+GROUP BY DATE_TRUNC('month', order_date)
+ORDER BY bulan;
+
+-- Analisis: Top 10 produk terlaris
+SELECT 
+  p.product_name,
+  SUM(oi.quantity) AS total_terjual,
+  SUM(oi.quantity * oi.price) AS revenue
+FROM order_items oi
+JOIN products p ON oi.product_id = p.product_id
+GROUP BY p.product_name
+ORDER BY revenue DESC
+LIMIT 10;
+```
+
+**Desain Database untuk OLAP:**
+
+```
+✔ Denormalisasi (gabung tabel untuk query cepat)
+✔ Summary tables / materialized views
+✔ Column-oriented storage (optional)
+✔ Partitioning untuk data besar
+✔ Boleh ada duplikasi untuk kecepatan
+```
+
+---
+
+### Perbandingan OLTP vs OLAP
+
+| Aspek | OLTP | OLAP |
+|-------|------|------|
+| **Tujuan** | Transaksi harian | Analisis & laporan |
+| **Data size per query** | Kecil (KB) | Besar (GB) |
+| **Query type** | Simple, cepat | Complex, agregasi |
+| **Write operation** | Sangat sering | Jarang |
+| **Read operation** | Spesifik | Scan banyak data |
+| **Normalisasi** | Ya, tinggi | Bisa denormalisasi |
+| **Update** | Real-time | Batch (periodic) |
+| **Users** | Ribuan | Puluhan |
+| **Response time** | < 1 detik | Bisa menit |
+| **Contoh** | Kasir, booking | Dashboard, report |
+
+### Ilustrasi Perbedaan
+
+**OLTP - Seperti Kasir Supermarket:**
+
+```
+Customer A: Scan produk → Bayar → Selesai (3 detik)
+Customer B: Scan produk → Bayar → Selesai (3 detik)  
+Customer C: Scan produk → Bayar → Selesai (3 detik)
+
+Ribuan transaksi per hari, masing-masing harus CEPAT!
+```
+
+**OLAP - Seperti Laporan Manager:**
+
+```
+Manager: "Berapa total penjualan Q1 2024?"
+System: *Analisis 10 juta transaksi* → Hasil (30 detik)
+
+Beberapa query per hari, boleh agak lama tapi akurat!
+```
+
+---
+
+### Hybrid: Sistem Real-World
+
+Dalam praktik, banyak sistem punya KEDUA kebutuhan:
+
+```
+┌──────────────────────────────┐
+│   OLTP DATABASE              │
+│   (Transaksi harian)         │
+│   - Ternormalisasi           │
+│   - Write-heavy              │
+└──────────────────────────────┘
+           │
+           │ ETL Process
+           │ (Extract-Transform-Load)
+           │ Nightly/Hourly
+           ↓
+┌──────────────────────────────┐
+│   OLAP DATABASE/             │
+│   DATA WAREHOUSE             │
+│   - Denormalisasi            │
+│   - Read-heavy               │
+└──────────────────────────────┘
+```
+
+**Strategi Umum:**
+1. Database utama (OLTP) untuk transaksi
+2. Copy data ke database terpisah (OLAP) untuk analisis
+3. Desain berbeda sesuai kebutuhan masing-masing
+
+### Ringkasan untuk Mahasiswa
+
+| Kebutuhan | Karakter desain yang cocok |
+|-----------|----------------------------|
+| **OLTP** | Terstruktur, ternormalisasi, index untuk writes |
+| **OLAP** | Bisa denormalisasi, summary tables, index untuk reads |
+| **Hybrid** | Pisah database atau gunakan materialized views |
+
+**TIPS MAHASISWA:**
+
+1. **Untuk tugas/project biasa**: Fokus ke OLTP dulu (normalisasi yang baik)
+2. **Untuk dashboard/laporan**: Buat materialized view atau tabel summary
+3. **Jangan campur**: Jangan paksa OLAP query di database OLTP production
+4. **Think ahead**: Tanyakan "Sistem ini lebih banyak tulis atau baca?"
 
 ---
 
 ## I. Fleksibilitas vs Efisiensi vs Konsistensi
 
-Dalam perancangan database, ada trade-off yang sangat penting:
+Dalam perancangan database, ada **trade-off** (pertukaran) yang sangat penting:
 
-* sistem yang terlalu fleksibel belum tentu efisien,
-* sistem yang sangat cepat belum tentu mudah dikembangkan,
-* sistem yang fleksibel tetapi longgar bisa mengorbankan konsistensi data.
+### The Iron Triangle of Database Design
 
-### Contoh pilihan yang terlihat fleksibel
+```
+          FLEKSIBILITAS
+               ▲
+              /|\
+             / | \
+            /  |  \
+           /   |   \
+          /    |    \
+         /     |     \
+        /      |      \
+       /       |       \
+      /        |        \
+     /   Pilih salah    \
+    /   2 atau cari      \
+   /      balance!        \
+  /_________________________\
+ EFISIENSI          KONSISTENSI
+```
 
-* menyimpan banyak atribut ke dalam JSON,
-* memakai model EAV untuk hampir semua data,
-* membuat skema terlalu umum agar semua jenis data bisa masuk.
+**Maksudnya:**
+- Sulit dapat ketiganya sempurna sekaligus
+- Harus pilih prioritas mana yang paling penting
+- Ada trade-off (pengorbanan) di setiap pilihan
 
-### Risiko jika terlalu fleksibel
+---
 
-1. query menjadi lebih rumit,
-2. index lebih sulit dimanfaatkan,
-3. validasi data menjadi lebih lemah,
-4. konsistensi data lebih sulit dijaga,
-5. performa jangka panjang dapat menurun.
+### Contoh Trade-off 1: JSON untuk Fleksibilitas
 
-### Prinsip penting
+**Skenario:** Toko online dengan berbagai kategori produk
 
-> Fleksibilitas yang baik adalah fleksibilitas yang tetap terkontrol.
+**Pilihan A: Tabel Terpisah (Konsisten + Efisien)**
+
+```sql
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  name TEXT,
+  price DECIMAL,
+  category TEXT
+);
+
+CREATE TABLE product_laptop (
+  product_id INT PRIMARY KEY,
+  ram_gb INT,
+  storage_gb INT,
+  processor TEXT
+);
+
+CREATE TABLE product_baju (
+  product_id INT PRIMARY KEY,
+  size VARCHAR(10),
+  color TEXT,
+  material TEXT
+);
+```
+
+**Keuntungan:**
+- Tipe data jelas dan terjaga
+- Query cepat dan mudah di-index
+- Validasi ketat (RAM harus integer, dll)
+
+**Kerugian:**
+- Harus buat tabel baru untuk kategori baru
+- Kurang fleksibel
+
+**Pilihan B: JSON untuk Semua Atribut (Fleksibel)**
+
+```sql
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  name TEXT,
+  price DECIMAL,
+  attributes JSONB  -- Semua atribut di sini!
+);
+
+-- Contoh data:
+INSERT INTO products VALUES (
+  1, 'Laptop ASUS', 5000000,
+  '{"ram_gb": 8, "storage_gb": 512, "processor": "Intel i5"}'
+);
+
+INSERT INTO products VALUES (
+  2, 'Kaos Polos', 50000,
+  '{"size": "L", "color": "Hitam", "material": "Katun"}'
+);
+```
+
+**Keuntungan:**
+- Sangat fleksibel, tambah atribut tanpa ALTER TABLE
+- Satu tabel untuk semua produk
+
+**Kerugian:**
+- Query lebih rumit: `WHERE attributes->>'ram_gb' = '8'`
+- Tidak ada validasi tipe data (RAM bisa jadi text!)
+- Index kurang efisien
+- Susah join dengan tabel lain
+
+---
+
+### Contoh Trade-off 2: Denormalisasi untuk Kecepatan
+
+**Skenario:** E-commerce butuh laporan penjualan cepat
+
+**Pilihan A: Normalisasi Penuh (Konsisten)**
+
+```sql
+CREATE TABLE orders (
+  order_id INT PRIMARY KEY,
+  customer_id INT,
+  order_date DATE
+);
+
+CREATE TABLE order_items (
+  order_id INT,
+  product_id INT,
+  quantity INT,
+  price DECIMAL
+);
+
+CREATE TABLE products (
+  product_id INT PRIMARY KEY,
+  product_name TEXT,
+  category TEXT
+);
+```
+
+**Query untuk laporan:**
+
+```sql
+-- Butuh banyak JOIN, bisa lambat!
+SELECT 
+  p.category,
+  SUM(oi.quantity * oi.price) AS revenue
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+WHERE o.order_date >= '2024-01-01'
+GROUP BY p.category;
+```
+
+**Pilihan B: Denormalisasi (Efisien untuk Baca)**
+
+```sql
+CREATE TABLE order_items (
+  order_id INT,
+  product_id INT,
+  product_name TEXT,      -- Duplikasi!
+  product_category TEXT,  -- Duplikasi!
+  quantity INT,
+  price DECIMAL,
+  order_date DATE         -- Duplikasi!
+);
+```
+
+**Query jadi simple:**
+
+```sql
+-- Tidak perlu JOIN!
+SELECT 
+  product_category,
+  SUM(quantity * price) AS revenue
+FROM order_items
+WHERE order_date >= '2024-01-01'
+GROUP BY product_category;
+```
+
+**Keuntungan:**
+- Query SANGAT cepat (no JOIN)
+- Cocok untuk reporting/OLAP
+
+**Kerugian:**
+- Data duplikat (boros storage)
+- Kalau nama produk berubah, harus update banyak row
+- Risiko inkonsistensi data
+
+---
+
+### Prinsip Memilih Trade-off
+
+**Prioritaskan KONSISTENSI jika:**
+- Sistem transaksional (OLTP)
+- Data sering berubah
+- Integritas data sangat penting (keuangan, medis)
+- Banyak user concurrent write
+
+**Prioritaskan EFISIENSI jika:**
+- Sistem analitik (OLAP)
+- Query kompleks dan sering diulang
+- Read-heavy, write jarang
+- Performa query lebih penting dari storage
+
+**Prioritaskan FLEKSIBILITAS jika:**
+- Struktur data sering berubah
+- Banyak atribut optional/dynamic
+- Integrasi dengan data eksternal
+- Prototype/MVP (Minimum Viable Product)
+
+### Strategi Hybrid (Best Practice)
+
+Jangan pilih ekstrem! Gunakan kombinasi:
+
+```sql
+-- Core data: Relasional (konsisten)
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  name TEXT NOT NULL,
+  price DECIMAL NOT NULL,
+  category TEXT NOT NULL,
+  
+  -- Extra attributes: JSON (fleksibel)
+  extra_specs JSONB
+);
+
+-- Summary table: Denormalisasi (efisien untuk read)
+CREATE MATERIALIZED VIEW sales_summary AS
+SELECT 
+  product_category,
+  DATE_TRUNC('month', order_date) AS month,
+  SUM(revenue) AS total_revenue
+FROM order_details
+GROUP BY product_category, month;
+```
+
+### Prinsip Penting
+
+> "Fleksibilitas yang baik adalah fleksibilitas yang tetap terkontrol."
+
+**TIPS MAHASISWA:**
+
+1. **Default**: Mulai dengan normalisasi (konsisten)
+2. **JSON**: Gunakan hanya untuk atribut tambahan, bukan core data
+3. **Denormalisasi**: Hanya jika sudah punya bukti query lambat
+4. **Test**: Ukur performa sebelum dan sesudah perubahan
+5. **Ask**: "Data ini penting? Sering berubah? Sering di-query?"
 
 ---
 
@@ -576,20 +1198,7 @@ Gunakan PostgreSQL dan buat dua model tabel untuk menyimpan data kontak pengguna
 
 ---
 
-## T. Tugas Mandiri
-
-Pilih satu sistem informasi yang Anda kenal, misalnya sistem akademik, toko online, aplikasi perpustakaan, atau aplikasi absensi.
-
-Kerjakan hal berikut:
-
-1. identifikasi tiga entitas utama pada sistem tersebut,
-2. jelaskan apakah masing-masing lebih cocok memakai natural key atau surrogate key,
-3. sebutkan satu bagian data yang sebaiknya relasional dan satu bagian data yang mungkin boleh disimpan sebagai JSON,
-4. jelaskan alasan desain Anda dari sudut pandang performa dan konsistensi data.
-
----
-
-## U. Penutup
+## T. Penutup
 
 Desain database yang baik tidak selalu berarti paling fleksibel, paling singkat, atau paling modern. Desain yang baik adalah desain yang sesuai dengan kebutuhan sistem, menjaga kualitas data, dan tetap dapat dioptimasi ketika data bertambah besar.
 
